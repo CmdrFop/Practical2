@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 #include <vector>
-#include "./InputParser.hpp"
+#include "InputParser.hpp"
 
 using namespace std;
 

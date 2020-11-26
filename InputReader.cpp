@@ -1,4 +1,4 @@
-#include "./Header Files/InputReader.hpp"
+#include "InputReader.hpp"
 
 void InputReader::read_input() {
 	string input;

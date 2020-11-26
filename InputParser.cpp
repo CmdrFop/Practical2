@@ -1,4 +1,4 @@
-#include "./Header Files/InputParser.hpp"
+#include "InputParser.hpp"
 
 // Parses a string to form a vector of arguments. The seperator is a space char (' ').
 vector<int> InputParser::splitString(const string& str) {

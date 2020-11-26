@@ -1,8 +1,8 @@
 #pragma once
 #include <iostream>
 #include <vector>
-#include "./InputReader.hpp"
-#include "./GroupsBuilder.hpp"
+#include "InputReader.hpp"
+#include "GroupsBuilder.hpp"
 
 using namespace std;
 
