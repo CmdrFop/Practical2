@@ -1,6 +1,5 @@
 #include "GroupsBuilder.hpp"
 #include <limits>
-#include <tuple>
 
 using namespace std;
 
@@ -26,7 +25,7 @@ void GroupsBuilder::create_groups(int number_of_products, int number_of_dividers
 	// 	}
 	// }
 
-	find_all_savings(number_of_products, all_costs);
+	find_all_groups(number_of_products, all_costs);
 }
 
 // step1: find all savings for each group (bottom-up) 
@@ -48,41 +47,62 @@ void GroupsBuilder::create_groups(int number_of_products, int number_of_dividers
 // 5  1
 // 10 23 43 637 45
 
-vector<tuple<string, int, int, string, string>> GroupsBuilder::find_all_savings(int number_of_products, vector<int> all_costs) {
-	// tuple<group, saving, minium dividers needed, group before this group, group after this group>
+vector<Group> GroupsBuilder::find_all_groups(int number_of_products, vector<int> all_costs) {
 	string all_products = "";
 	for (int i = 0; i < number_of_products; i++) {
 		all_products += to_string(i);
 	}
 
-	vector<tuple<string, int, int, string, string>> all_savings;
+	string current_group = "";
+	int total_cost;
+	int saving;
+	int minimum_dividers;
+	string group_before = "";
+	string group_after = "";
+
+	vector<Group> all_groups;
 	for (int i = 0; i < number_of_products; i++) {
-		string current_group = to_string(i);
-		int total_cost = all_costs[i];
-		int saving = total_cost - round(total_cost);
-		tuple <string, int, int, string, string> group = make_tuple(current_group, saving, 1, all_products.substr(0,i), all_products.substr(i + 1,number_of_products - 1));
-		all_savings.push_back(group);
+		for (int j = i; j < number_of_products; j++) {
+			if (i == j) {
+				current_group = to_string(i);
+				total_cost = all_costs[i];
+				saving = total_cost - round(total_cost);
+				minimum_dividers = (i == 0 || i == number_of_products - 1) ? 1 : 2;
+				group_before = all_products.substr(0, i);
+				group_after = all_products.substr(i + 1, number_of_products - 1);
+			}
+			else {
+				current_group += to_string(j);
+				total_cost += all_costs[j];
+				int saving = total_cost - round(total_cost);
 
-		for (int j = i + 1; j < number_of_products; j++) {
-			current_group += to_string(j);
-			total_cost += all_costs[j];
-			int saving = total_cost - round(total_cost);
-			tuple <string, int, int, string, string> group;
-
-			if (i == 0 && j == number_of_products - 1) {		// abcd
-				group = make_tuple(current_group, saving, 0, "", "");
-			} else if (i > 0 && j == number_of_products - 1) { // | bcd
-				group = make_tuple(current_group, saving, 2, all_products.substr(0,i), "");
-			} else if (i > 0 && j < number_of_products - 1) { // | bc |
-				group = make_tuple(current_group, saving, 2, all_products.substr(0,i), all_products.substr(j + 1,number_of_products - 1));
-			} else { // abc |
-				group = make_tuple(current_group, saving, 2, "", all_products.substr(j + 1,number_of_products - 1));
+				if (i == 0 && j == number_of_products - 1) {		// abcd
+					minimum_dividers = 0;
+					group_before = "";
+					group_after = "";
+				}
+				else if (i > 0 && j == number_of_products - 1) { // | bcd
+					minimum_dividers = 1;
+					group_before = all_products.substr(0, i);
+					group_after = "";
+				}
+				else if (i > 0 && j < number_of_products - 1) { // | bc |
+					minimum_dividers = 2;
+					group_before = all_products.substr(0, i);
+					group_after = all_products.substr(j + 1, number_of_products - 1);
+				}
+				else { // abc |
+					minimum_dividers = 1;
+					group_before = "";
+					group_after = all_products.substr(j + 1, number_of_products - 1);
+				}
 			}
 
-			all_savings.push_back(group);
+			Group group = Group(current_group, total_cost, saving, minimum_dividers, group_before, group_after);
+			all_groups.push_back(group);
 		}
 	}
-	return all_savings;
+	return all_groups;
 }
 
 // step2: get best group
