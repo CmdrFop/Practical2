@@ -7,8 +7,6 @@
 int main()
 {
     MoneySaver saver;
-    //saver.process_input();
     saver.run();
-    
     return 0;
 }
