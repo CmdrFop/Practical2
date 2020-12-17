@@ -107,17 +107,23 @@ vector<Group> GroupsBuilder::find_all_groups(int number_of_products, vector<int>
 
 // find best divisions for not main groups
 int get_local_cost(string group, int division = -1){
+	int best_savings = 1; // 1 = group.savings
+
 	if (group == "")
 		return 0;
 	else if (group.size() == 1)
 		return 1; // return group.savings
-	else {
-		int best_savings = 1; // 1 = group.savings
+
+	else {	
 		// divide group to find best division of items.
 		int saving_first_half = get_local_cost( group.substr( 0, group.size())); // this division does not cover all possible divisions yet
 		int saving_second_half = get_local_cost( group.substr( group.size() + 1, -1));
+		if (saving_first_half > best_savings && saving_first_half > saving_second_half)
+			return saving_first_half;
+		if (saving_second_half > best_savings && saving_second_half > saving_first_half)
+			return saving_second_half;
 	}
-	return 1;
+	return best_savings;
 }
 
 // step 2.-1 Find optimal combinations of groups
@@ -155,6 +161,7 @@ int get_min_cost(Group group, int divisions){
 }
 
 // step2: get best groups
+// cycle trough all groups so we can find the best division of items
 void get_best_group(vector<Group> groups, int division) {
 	int mincost = get_min_cost(groups[0], division);
 	Group mingroup = groups[0];
