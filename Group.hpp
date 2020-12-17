@@ -14,6 +14,7 @@ private:
 	string group_before;
 	string group_after;
 public:
+	Group() {};
 	Group(string _members, int _total_cost, int _saving, int _minimum_dividers, string _group_before, string _group_after) :
 		total_cost(_total_cost), 
 		saving(_saving),
