@@ -104,7 +104,9 @@ vector<Group> GroupsBuilder::find_all_groups(int number_of_products, vector<int>
 	}
 	return all_groups;
 }
-int get_local_cost(string group){
+
+// find best divisions for not main groups
+int get_local_cost(string group, int division = -1){
 	if (group == "")
 		return 0;
 	else if (group.size() == 1)
@@ -118,16 +120,48 @@ int get_local_cost(string group){
 	return 1;
 }
 
-int get_min_cost(Group group){
+// step 2.-1 Find optimal combinations of groups
+int get_min_cost(Group group, int divisions){
+	int group_before_max_division;
+	int group_after_max_division;
+
+	//1 See if there is a group before and if it can be divided to simplify calculations in the get_local_cost function
+	if (group.get_group_before() == "")
+		group_after_max_division = divisions -1;
+	else if (group.get_group_before().size() == 1)
+		group_after_max_division = divisions -2;
+
+	//2 See if there is a group before and if it can be divided to simplify calculations in the get_local_cost function
+	if (group.get_group_after() == "")
+		group_before_max_division = divisions -1;
+	else if (group.get_group_after().size() == 1)
+		group_before_max_division = divisions -2;
+
+	//3 change the second argument of the get_local_cost function if simplification was found possbile in the code before ( any of the if statements were true)
+	int group_before_savings;
+	if (group_after_max_division)
+		group_before_savings =  get_local_cost(group.get_group_before(), group_before_max_division);
+	else
+		 group_before_savings = get_local_cost(group.get_group_before());
+
+	// same procedure as 3 but for group after
+	int group_after_savings;
+	if (group_after_max_division)
+		group_after_savings =  get_local_cost(group.get_group_after(), group_before_max_division);
+	else
+		 group_after_savings = get_local_cost(group.get_group_after());
+
 	return group.get_saving() + get_local_cost(group.get_group_before()) + get_local_cost(group.get_group_before());
 }
 
-// step2: get best group
-void get_best_group(vector<Group> groups) {
-	int mincost = get_min_cost(groups[0]);
+// step2: get best groups
+void get_best_group(vector<Group> groups, int division) {
+	int mincost = get_min_cost(groups[0], division);
 	Group mingroup = groups[0];
+
 	for (int i = 1; i < groups.size(); i++){
-		int cost = get_min_cost(groups[i]);
+		int cost = get_min_cost(groups[i], division);
+
 		if (cost < mincost){
 			mincost = cost;
 			mingroup = groups[i];
