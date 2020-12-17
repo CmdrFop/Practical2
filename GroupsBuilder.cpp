@@ -104,16 +104,36 @@ vector<Group> GroupsBuilder::find_all_groups(int number_of_products, vector<int>
 	}
 	return all_groups;
 }
+int get_local_cost(string group){
+	if (group == "")
+		return 0;
+	else if (group.size() == 1)
+		return 1; // return group.savings
+	else {
+		int best_savings = 1; // 1 = group.savings
+		// divide group to find best division of items.
+		int saving_first_half = get_local_cost( group.substr( 0, group.size())); // this division does not cover all possible divisions yet
+		int saving_second_half = get_local_cost( group.substr( group.size() + 1, -1));
+	}
+	return 1;
+}
+
+int get_min_cost(Group group){
+	return group.get_saving() + get_local_cost(group.get_group_before()) + get_local_cost(group.get_group_before());
+}
 
 // step2: get best group
-// void get_best_group(tuple<string, int, int, string, string>> groups) {
-// 	int mincost = getmincost(groups[0]);
-// 	for (int i = 1; i < groups.size(); i++){
-// 		int cost = getmincost(groups[i]);
-// 		if (cost < mincost)
-// 			mincost = cost;
-// 	}
-// }
+void get_best_group(vector<Group> groups) {
+	int mincost = get_min_cost(groups[0]);
+	Group mingroup = groups[0];
+	for (int i = 1; i < groups.size(); i++){
+		int cost = get_min_cost(groups[i]);
+		if (cost < mincost){
+			mincost = cost;
+			mingroup = groups[i];
+		}
+	}
+}
 
 /*
 			
