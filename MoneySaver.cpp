@@ -4,7 +4,6 @@ void MoneySaver::run() {
 	process_input();
 	GroupsBuilder groups_builder;
 	groups_builder.create_groups(number_of_products, number_of_dividers, all_costs);
-	cout << groups_builder.get_minimum_cost() << endl;
 }
 
 void MoneySaver::process_input() {

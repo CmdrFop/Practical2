@@ -3,199 +3,189 @@
 
 using namespace std;
 
-//map<string,Group> groups_map;
-
 void GroupsBuilder::create_groups(int number_of_products, int number_of_dividers, vector<int> all_costs) {
-	// minimum_cost = numeric_limits<int>::max();
-	// vector<int> groups;
-	// for (int position_first_divider = 1; position_first_divider < all_costs.size() - 1; position_first_divider++) {
-	// 	int total_cost_first_group = 0;
-
-	// 	for (int index_element_first_group = 0; index_element_first_group < position_first_divider; index_element_first_group++)
-	// 		total_cost_first_group += all_costs[index_element_first_group];
-
-	// 	int total_cost_second_group = 0;
-	// 	for (int index_element_second_group = position_first_divider; index_element_second_group < all_costs.size(); index_element_second_group++)
-	// 		total_cost_second_group += all_costs[index_element_second_group];
-
-	// 	total_cost_first_group = round(total_cost_first_group);
-	// 	total_cost_second_group = round(total_cost_second_group);
-	// 	int total = total_cost_first_group + total_cost_second_group;
-
-	// 	if (total < minimum_cost) {
-	// 		minimum_cost = total;
-	// 	}
-	// }
-	maximum_cost = 50000 * number_of_products;
-	create_map(number_of_products, all_costs);
-}
-// step1: find all savings for each group (bottom-up) 
-// and determine which division causes highest saving
-					// group saving minium dividers needed
-// a	, -, 1, "" , "bcd"			<"0123" , 1, 	3>
-// ab	, -, 1, "" , "cd"			<"01234", 4, 	2>
-// abc	, -, 1, "" , "d"			<"012"  , 2, 	1>
-// abcd	, -, 0, "" , ""			<"12"   , 1, 	5, "0", "3">		"123" 
-// b	, -, 2, "a", 
-// bc	:
-// bcd	:
-// c	:
-// cd	:
-
-// a | b | c | d			k = 1
-
-// input: 
-// 5  1
-// 10 23 43 637 45
-tuple<int, string, string> GroupsBuilder::assign_group_values(int minimum_dividers, string group_before, string group_after){
-	return tuple<int, string, string> (minimum_dividers, group_before, group_after);
-}
-
-void GroupsBuilder::create_map(int number_of_products, vector<int> all_costs) {
-	string all_products = "";
-	for (int i = 0; i < number_of_products; i++) {
-		all_products += to_string(i);
+	string total_group = "";
+	vector<string> elements = {};
+	int total_cost = 0;
+	for (int index = 0; index < number_of_products; index++) {
+		total_group += to_string(index);
+		elements.push_back(to_string(index));
+		total_cost += all_costs[index];
 	}
 
-	string current_group = "";
-	int total_cost;
-	int saving;
-	tuple<int, string, string> assgin_group;
+	tuple<int, vector<string>, int, string, int,  string > result = recursion_solution(total_group, all_costs, number_of_dividers, elements, total_cost, 0, "");
 
-	for (int i = 0; i < number_of_products; i++) {
-		for (int j = i; j < number_of_products; j++) {
-			if (i == j) {
-				current_group = to_string(i);
-				total_cost = all_costs[i];
-				saving = total_cost - round(total_cost);
-				assgin_group = assign_group_values((i == 0 || i == number_of_products - 1) ? 1 : 2, all_products.substr(0, i), all_products.substr(i + 1, number_of_products - 1));
-			}
-			else {
-				current_group += to_string(j);
-				total_cost += all_costs[j];
-				int saving = total_cost - round(total_cost);
-
-				if (i == 0 && j == number_of_products - 1) {		// abcd
-					assgin_group = assign_group_values(0, "", "");
-				}
-				else if (i > 0 && j == number_of_products - 1) { // | bcd
-					assgin_group = assign_group_values(1, all_products.substr(0, i), "");
-				}
-				else if (i > 0 && j < number_of_products - 1) { // | bc |
-					assgin_group = assign_group_values(2,  all_products.substr(0, i), all_products.substr(j + 1, number_of_products - 1));
-				}
-				else { // abc |
-					assgin_group = assign_group_values(1, "", all_products.substr(j + 1, number_of_products - 1));
-				}
-			}
-
-			Group group = Group(current_group, total_cost, saving, get<0>(assgin_group), get<1>(assgin_group), get<2>(assgin_group));
-			groups_map.insert(make_pair(group.get_members(), group));			
-		}
-	}
-}
-
-// find best divisions for not main groups
-int GroupsBuilder::get_local_cost(string group, int division ){
-	int best_savings = 0; // 1 = group.savings
-	auto it = groups_map.find(group);  		// O(log n)
-	
-	if ( it == groups_map.end() ) {  
-		// not found  
-		cout<<"Element not found";  
-	}   
-	else {  
-		// found  
-		// cout << "Iterator points to " << it->first << " = " << it->second << endl;  
-		best_savings = it->second.get_saving();
+	std::cout << to_string(get<0>(result)) << endl;
+	for (int i; i < get<1>(result).size(); i++){
+		std::cout << get<1>(result)[i] << endl;
 	}
 
-	if (group == "")
-		return 0;
-	else if (group.size() == 1) 		
-		return best_savings; // return group.savings
-		
-	else {	
-		// divide group to find best division of items.
-		// max_size_groups = ceil((amount_of_nodes * 1.0) / division);
+	// ik weet niet zeker of line 18 in een keer kan, misschien moet je het opsplitsen in:
+	// vector<s
 
-		int saving_first_half = get_local_cost( group.substr(0, int(group.size()/2)), division); // this division does not cover all possible divisions yet
-		int saving_second_half = get_local_cost( group.substr(int(group.size()/2) + 1, -1), division);
-
-		int saving_middle = get_local_cost( group.substr(1,-1), division);
-		int saving_start = get_local_cost(group.substr(0,1), division);
-		int saving_end = get_local_cost(group.substr(-2,-1), division);
-
-		int alternate_saving;
-		if  (saving_middle + saving_start + saving_end > saving_first_half + saving_second_half)
-			int alternate_saving = saving_middle + saving_start + saving_end;
-		else
-			int alternate_saving = saving_first_half + saving_second_half;
-
-		if (alternate_saving > best_savings )
-		//  return alternate_saving
-			return alternate_saving;
-	}
-	return best_savings;
+	// 5 1
+	// 10 23 43 637 45
+	// 5  1
+	// 10 23 43 637 45
+			
 }
-
-//1 See if there is a group before and if it can be divided to simplify calculations in the get_local_cost function
-int GroupsBuilder::see_if_edge_or_single(string group, int division){
-	if (group == "")
-		return division -1;
-	else if (group.size() == 1)
-		return division -2;
-	return -1;
-}
-
-// step 2.-1 Find optimal combinations of groups
-int GroupsBuilder::get_min_cost(Group group, int divisions){
-
-	//1 See if there is a group before and if it can be divided to simplify calculations in the get_local_cost function
-	int group_before_max_division = see_if_edge_or_single(group.get_group_before(), divisions);
-	int group_after_max_division = see_if_edge_or_single(group.get_group_after(), divisions);
-
-	//3 change the second argument of the get_local_cost function if simplification was found possbile in the code before ( any of the if statements were true)
-	int group_before_savings =  get_local_cost(group.get_group_before(), group_before_max_division);
-	int	group_after_savings =  get_local_cost(group.get_group_after(), group_before_max_division);
-
-	return group.get_saving() + get_local_cost(group.get_group_before(), divisions) + get_local_cost(group.get_group_after(), divisions);
-}
-
-// step2: get best groups
-// cycle trough all groups so we can find the best division of items
-void GroupsBuilder::get_best_group(int division) {
-	int mincost = maximum_cost;
-	Group best_group;
-
-	for (auto const& x : groups_map)
-	{
-		int cost = get_min_cost(x.second, division);
-
-		if (cost <= mincost){
-			mincost = cost;
-			best_group = x.second;
-		}
-	}
-}
-
 int GroupsBuilder::round(int cost) {
-	string string_cost = to_string(cost);
-	int last_number = stoi(string_cost.substr(string_cost.size() - 1, string_cost.size() - 1));
+    if (cost >= 0 && cost < 3)
+        return 0;
+    if (cost > 2 && cost < 8)
+        return 5;
+    if (cost > 7 && cost < 10)
+        return 10;
+
+    string string_cost = to_string(cost);
+    int last_number = stoi(string_cost.substr(string_cost.size() - 1, string_cost.size() - 1));
+
+    string result = string_cost;
+
+    if (last_number > 0 && last_number < 3) {
+        result = string_cost.substr(0, string_cost.size() - 1) + "0";
+    }
+    else if (last_number > 2 && last_number < 8) {
+        result = string_cost.substr(0, string_cost.size() - 1) + "5";
+    }
+    else if (last_number == 8 || last_number == 9) {
+        int new_cost = stoi(string_cost.substr(0, string_cost.size() - 1));
+        new_cost++;
+        result = to_string(new_cost) + "0";
+    }
+
+    return stoi(result);
+}
+
+tuple<int, vector<string>, int, string, int, string>GroupsBuilder::recursion_solution(string group, vector<int> cost, int max_divisions, vector<string> elements, int group_cost, int other_item_cost, string not_in_group) { //, int previous_cost
+	// If we meet the base case we return the cost for this single item
+	if (group.size() == 1) {
+		vector<string> single_group = { group };
+		return make_tuple(round(cost[stoi(group)]), single_group, 0, not_in_group , other_item_cost,  "");
+	}
+
+	// Create 2 sub_groups from the supe group in such a way all possible groups are covered
+	string rec_group1 = group.substr(0, group.size() - 1);
+	string rec_group2 = group.substr(1, group.size());
+
+	string not_in_group1 = not_in_group + group.substr(group.size() - 1, group.size());
+	string not_in_group2 = not_in_group + group.substr(0, 1);
 	
-	string result = string_cost;
+	//to remove cost of first element:
+	int group_cost1 = group_cost - cost[stoi(elements[elements.size()-1])];
 
-	if (last_number > 0 && last_number < 3) {
-		result = string_cost.substr(0, string_cost.size() - 1) + "0";
-	}
-	else if (last_number > 2 && last_number < 8) {
-		result = string_cost.substr(0, string_cost.size() - 1) + "5";
-	}
-	else if (last_number == 8 || last_number == 9) {
-		int new_cost = stoi(string_cost.substr(0, string_cost.size() - 1));
-		new_cost++;
-		result = to_string(new_cost) + "0";
-	}
+	int other_item_cost1 = other_item_cost + cost[stoi(elements[elements.size()-1])];
+	//to remove cost of last element:
+	int group_cost2 = group_cost - cost[stoi(elements[0])];
+	int other_item_cost2 = other_item_cost + cost[stoi(elements[0])];
+	vector<string> elements1 = elements;
+	elements1.pop_back();
+	vector<string> elements2 = elements;
+	elements2.erase(elements2.begin());	// element [1,2,3,4] rec_group = '1234'
+										// bij elements moet je elements nemen dus een subvector van elements
 
-	return stoi(result);
+	// Recursion, we split up the group unitl it reaches it atoms (base case) , on the way we compute the best cost
+	// and combination of groups
+	tuple<int, vector<string>, int, string, int, string> result = recursion_solution(rec_group1, cost, max_divisions, elements1, group_cost1, other_item_cost1,not_in_group1);
+	int cost_group1 = get<0>(result);
+	vector<string> group1 = get<1>(result);
+	int division1 = get<2>(result);
+	string previous_group1 = get<3>(result);
+	int previous_item_cost1 = get<4>(result);
+
+	result = recursion_solution(rec_group2, cost, max_divisions, elements2, group_cost2, other_item_cost2, not_in_group2);
+	int cost_group2 = get<0>(result);
+	vector<string> group2 = get<1>(result);
+	int division2 = get<2>(result);
+	string previous_group2 = get<3>(result);
+	int previous_item_cost2 = get<4>(result);
+
+	int alternative_cost;
+	vector<string> right_groups;
+	string other_group;
+	int division;
+	int compare;
+
+	//If groups overlap add the best one
+	if (group.size() > 2) {
+		// group1 = 0
+		// group = 01
+		// other_item_cost = 1234
+		// previous_item_cost = 234
+		// if (cost_group1 + round(other_item_cost) < 
+		// else if cost_group1 + round(cost[stoi(elements2[elements2.size() - 1])]) + round(previous_item_cost) < 
+		if (cost_group1 + round(previous_item_cost1) < cost_group1 + round(cost[stoi(elements2[elements2.size() - 1])]) + round(other_item_cost)
+		&& cost_group1 + round(previous_item_cost1) < cost_group2 + round(cost[stoi(elements1[0])]) + round(other_item_cost)
+		&& cost_group1 + round(previous_item_cost1) < cost_group2 + round(previous_item_cost2)){
+			alternative_cost = cost_group1; //+ round(cost[stoi(elements2[elements2.size() - 1])]); //+ round(previous_item_cost1); // remove end later
+			compare = cost_group1 + round(previous_item_cost1);
+			right_groups = group1;
+			other_group = (previous_group1);
+			division = right_groups.size() - 1;
+		}
+		else if (cost_group2 + round(previous_item_cost2) < cost_group1 + round(cost[stoi(elements2[elements2.size() - 1])]) + round(other_item_cost)
+		&& cost_group2 + round(previous_item_cost2) < cost_group2 + round(cost[stoi(elements1[0])]) + round(other_item_cost)
+		&& cost_group2 + round(previous_item_cost2) < cost_group1 + round(previous_item_cost1)){
+			alternative_cost = cost_group2; //+ round(cost[stoi(elements1[0])]); //+ round(previous_item_cost2); // remove end later
+			compare = cost_group2 + round(previous_item_cost2);
+			right_groups = group1;
+			other_group = (previous_group2);
+			division = right_groups.size() - 1;
+		}
+		// else (cost_group2 + round(cost[stoi(elements1[0])]) + round(previous_item_cost)) <
+		if (cost_group1 + round(cost[stoi(elements2[elements2.size() - 1])]) < cost_group2 + round(cost[stoi(elements1[0])])) { // cost_group1 < cost_group2
+			alternative_cost = cost_group1 + round(cost[stoi(elements2[elements2.size() - 1])]);
+			compare = cost_group1 + round(cost[stoi(elements2[elements2.size() - 1])]) + round(other_item_cost);
+			right_groups = group1;
+			right_groups.push_back(elements2[elements2.size() - 1]);
+			other_group = (not_in_group);
+			division = right_groups.size() - 1;
+		}
+		else {
+			alternative_cost = cost_group2 + round(cost[stoi(elements1[0])]);
+			compare = cost_group2 + round(cost[stoi(elements1[0])]) + round(other_item_cost);
+			right_groups = group2;
+			right_groups.push_back(elements1[0]);
+			other_group = (not_in_group);
+			division = right_groups.size() - 1;
+		}
+	}
+	else {
+		if (cost_group1 + round(previous_item_cost1) < cost_group2 + round(previous_item_cost2 ) && cost_group1 + round(previous_item_cost1) < cost_group1 + cost_group2 + round(other_item_cost)){
+				alternative_cost = cost_group1; //+ round(previous_item_cost1);
+				compare =  cost_group1 + round(previous_item_cost1);
+				right_groups = group1;
+				other_group = previous_group1;
+				division = right_groups.size() - 1;
+		}
+		else if (cost_group2 + round(previous_item_cost2) < cost_group1 + round(previous_item_cost1) && cost_group2 + round(previous_item_cost2) < cost_group1 + cost_group2 + round(other_item_cost)){
+				alternative_cost = cost_group2; //+ round(previous_item_cost2);
+				right_groups = group2;
+				other_group = previous_group2;
+				division = right_groups.size() - 1;
+		}
+		else {
+			alternative_cost = cost_group1 + cost_group2;
+			compare = cost_group1 + cost_group2 + round(other_item_cost);
+			right_groups = group1;
+			right_groups.insert(right_groups.end(), group2.begin(), group2.end());
+			division = right_groups.size() - 1;
+			other_group = not_in_group;
+		}
+		// If they do not overlap combine the cost of these 2 groups
+		
+	}
+	// Compare the cost of the sub group calculated in the recursion function to the cost of recomputing the combined
+	// round(group_cost) + round(previous_item_cost))
+	int AaaA = round(group_cost) + round(other_item_cost);
+	if (round(group_cost) + round(other_item_cost) > compare && (division + 0 <= max_divisions))
+		return make_tuple(alternative_cost, right_groups, division + 0, not_in_group, other_item_cost, other_group);
+
+		// if the new computed score is better remove the sub groups and use the larger group
+	//if ()
+	vector<string> return_group = { group };
+	return make_tuple(round(group_cost), return_group, 0, not_in_group, other_item_cost, not_in_group);
+
+	// Nu moeten we het et wat breakpoints testen
+	// okey
 }
